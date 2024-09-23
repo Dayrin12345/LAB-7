@@ -1,0 +1,75 @@
+#include <Arduino.h>
+
+// Pines de los LEDs y potenciometro
+#define LED1 25
+#define LED2 26
+#define LED3 27
+#define POT 34
+
+void encender_led(int numero, int tiempo);
+
+String msg1 = "Seleccione 1. Lectura ADC 2. Control de LEDs";
+String msg2 = "Ingrese no. de led a encender y tiempo, separados por una coma (Ej. 1,500)";
+
+void setup() {
+    Serial.begin(115200);
+    pinMode(LED1, OUTPUT);
+    pinMode(LED2, OUTPUT);
+    pinMode(LED3, OUTPUT);
+    pinMode(POT, INPUT);
+}
+
+void loop() {
+    Serial.println(msg1);
+    while (Serial.available() == 0) {
+        // Esperar la entrada del usuario
+    }
+
+    int opcion = Serial.parseInt();
+    Serial.read(); // Limpiar el buffer
+
+    if (opcion == 1) {
+        int valor = analogRead(POT);
+        float voltaje = valor * (3.3 / 4095);
+        Serial.printf("Voltaje: %.2fV\n", voltaje);
+    } else if (opcion == 2) {
+        Serial.println(msg2);
+        while (Serial.available() == 0) {
+            // Esperar entrada del usuario
+        }
+        
+        String input = Serial.readStringUntil('\n');
+        int commaIndex = input.indexOf(',');
+        if (commaIndex > 0) {
+            int ledNumero = input.substring(0, commaIndex).toInt(); // Obtener el número del LED
+            int tiempo = input.substring(commaIndex + 1).toInt(); // Obtener el tiempo
+
+            if ((ledNumero < 1 || ledNumero > 3) || (tiempo <= 0)) {
+                Serial.println("ERROR: Valor de LED o tiempo inválido.");
+            } else {
+                encender_led(ledNumero, tiempo);
+            }
+        } else {
+            Serial.println("ERROR: Ingrese valor de la forma 'numero,tiempo'.");
+        }
+    } else {
+        Serial.println("Opción inválida.");
+    }
+}
+
+// Encender LED
+void encender_led(int numero, int tiempo) {
+    switch (numero) {
+        case 1:
+            digitalWrite(LED1, HIGH);
+            break;
+        case 2:
+            digitalWrite(LED2, HIGH);
+            break;
+        case 3:
+            digitalWrite(LED3, HIGH);
+            break;
+    }
+    delay(tiempo); // Mantener el LED encendido
+    digitalWrite(numero == 1 ? LED1 : (numero == 2 ? LED2 : LED3), LOW); // Apagar LED
+}
